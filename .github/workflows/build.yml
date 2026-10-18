@@ -1,0 +1,23 @@
+name: Build
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - run: flutter create . --platforms=android --project-name knowledge_app
+      - run: rm -f test/widget_test.dart
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter test
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
