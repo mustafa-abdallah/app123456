@@ -6,6 +6,7 @@ import '../../../database/database.dart';
 import '../../../repositories/notes_repository.dart';
 import '../../../repositories/providers.dart';
 import '../../habits/providers/habits_providers.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../../tasks/providers/tasks_providers.dart';
 
 final _recentNotesProvider = StreamProvider.autoDispose<List<Note>>(
@@ -38,13 +39,25 @@ class DashboardScreen extends ConsumerWidget {
     final notes = ref.watch(_recentNotesProvider).valueOrNull ?? const <Note>[];
 
     return ListView(padding: const EdgeInsets.all(20), children: [
-      Text(greeting, style: Theme.of(context).textTheme.bodyLarge),
-      const SizedBox(height: 4),
-      Text('لوحة التحكم',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(fontWeight: FontWeight.bold)),
+      Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(greeting, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 4),
+            Text('لوحة التحكم',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+          ]),
+        ),
+        IconButton(
+          tooltip: 'الإعدادات',
+          icon: const Icon(Icons.settings_outlined),
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+        ),
+      ]),
       const SizedBox(height: 16),
       Row(children: [
         Expanded(
