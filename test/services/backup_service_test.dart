@@ -89,4 +89,27 @@ void main() {
         throwsFormatException);
     expect(await dst.select(dst.notes).get(), isEmpty);
   });
+
+  test('الاستيراد يعيد ما حُذف منطقيًا بعد النسخة (ملاحظة ومهمة وعادة)', () async {
+    await _seed(dst);
+    final json = await BackupService(dst).exportJson();
+
+    final note = (await dst.select(dst.notes).get()).single;
+    final task = (await dst.select(dst.tasks).get()).single;
+    final habit = (await dst.select(dst.habits).get()).single;
+    await NotesRepository(dst).softDelete(note.id);
+    await TasksRepository(dst).softDelete(task.id);
+    await HabitsRepository(dst).softDelete(habit.id);
+    await TasksRepository(dst).toggle(task);
+    expect(await HabitsRepository(dst).watchActive().first, isEmpty);
+
+    await BackupService(dst).importJson(json);
+
+    expect((await NotesRepository(dst).watch(const NotesFilter()).first).length, 1);
+    expect((await TasksRepository(dst).watch(TaskView.active).first).length, 1);
+    expect((await HabitsRepository(dst).watchActive().first).length, 1);
+    final t = (await dst.select(dst.tasks).get()).single;
+    expect(t.status, 'todo');
+    expect(t.completedAt, isNull);
+  });
 }
