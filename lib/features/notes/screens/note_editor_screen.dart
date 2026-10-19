@@ -109,6 +109,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     super.dispose();
   }
 
+  /// حذف منطقي (تذهب إلى المحذوفات) مع إمكانية التراجع.
+  Future<void> _deleteNote() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف الملاحظة'),
+        content: const Text('ستُنقل إلى المحذوفات ويمكنك استرجاعها.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    _debounce?.cancel();
+    await _persist(); // لا نفقد آخر تعديل إن تراجع المستخدم لاحقًا
+    await _repo.softDelete(widget.noteId);
+    if (!mounted) return;
+    final id = widget.noteId;
+    final repo = _repo;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: const Text('نُقلت الملاحظة إلى المحذوفات'),
+        action: SnackBarAction(label: 'تراجع', onPressed: () => repo.restore(id)),
+      ));
+  }
+
   // ---------- أدوات Markdown ----------
 
   void _setBody(String text, TextSelection sel) {
@@ -389,12 +419,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   _showHistory();
                 case 'move':
                   _moveToFolder();
+                case 'delete':
+                  _deleteNote();
               }
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'links', child: Text('الروابط')),
               PopupMenuItem(value: 'history', child: Text('سجل التعديلات')),
               PopupMenuItem(value: 'move', child: Text('نقل إلى مجلد')),
+              PopupMenuItem(value: 'delete', child: Text('حذف الملاحظة')),
             ],
           ),
         ],
