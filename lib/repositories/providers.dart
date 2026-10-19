@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/database.dart';
+import '../services/backup_service.dart';
 import 'folders_repository.dart';
 import 'habits_repository.dart';
 import 'notes_repository.dart';
@@ -25,3 +26,6 @@ final habitsRepositoryProvider =
 
 final projectsRepositoryProvider =
     Provider<ProjectsRepository>((ref) => ProjectsRepository(ref.watch(databaseProvider)));
+
+final backupServiceProvider =
+    Provider<BackupService>((ref) => BackupService(ref.watch(databaseProvider)));
