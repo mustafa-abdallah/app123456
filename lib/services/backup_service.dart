@@ -76,6 +76,8 @@ class BackupService {
         // الأب قد يأتي بعد الابن في الملف؛ نؤجل فحص المفاتيح الأجنبية لنهاية المعاملة.
         await _db.customStatement('PRAGMA defer_foreign_keys = ON');
 
+        // toCompanion(false): القيم الفارغة (مثل deletedAt) تُكتب فعلًا فتُلغي أثر الحذف،
+        // بدل أن تُتجاهل فيبقى السجل المحذوف مخفيًا بعد الاستيراد.
         Future<void> put<T extends Table, D>(TableInfo<T, D> table, String name,
             Insertable<D> Function(Map<String, dynamic>) from) async {
           for (final r in rows(name)) {
@@ -84,19 +86,19 @@ class BackupService {
           }
         }
 
-        await put(_db.folders, 'folders', (j) => Folder.fromJson(j));
-        await put(_db.projects, 'projects', (j) => Project.fromJson(j));
-        await put(_db.tags, 'tags', (j) => Tag.fromJson(j));
-        await put(_db.notes, 'notes', (j) => Note.fromJson(j));
-        await put(_db.noteTags, 'noteTags', (j) => NoteTag.fromJson(j));
-        await put(_db.links, 'links', (j) => Link.fromJson(j));
-        await put(_db.noteVersions, 'noteVersions', (j) => NoteVersion.fromJson(j));
-        await put(_db.attachments, 'attachments', (j) => Attachment.fromJson(j));
-        await put(_db.tasks, 'tasks', (j) => Task.fromJson(j));
-        await put(_db.taskDeps, 'taskDeps', (j) => TaskDep.fromJson(j));
-        await put(_db.habits, 'habits', (j) => Habit.fromJson(j));
-        await put(_db.habitSchedules, 'habitSchedules', (j) => HabitSchedule.fromJson(j));
-        await put(_db.habitLogs, 'habitLogs', (j) => HabitLog.fromJson(j));
+        await put(_db.folders, 'folders', (j) => Folder.fromJson(j).toCompanion(false));
+        await put(_db.projects, 'projects', (j) => Project.fromJson(j).toCompanion(false));
+        await put(_db.tags, 'tags', (j) => Tag.fromJson(j).toCompanion(false));
+        await put(_db.notes, 'notes', (j) => Note.fromJson(j).toCompanion(false));
+        await put(_db.noteTags, 'noteTags', (j) => NoteTag.fromJson(j).toCompanion(false));
+        await put(_db.links, 'links', (j) => Link.fromJson(j).toCompanion(false));
+        await put(_db.noteVersions, 'noteVersions', (j) => NoteVersion.fromJson(j).toCompanion(false));
+        await put(_db.attachments, 'attachments', (j) => Attachment.fromJson(j).toCompanion(false));
+        await put(_db.tasks, 'tasks', (j) => Task.fromJson(j).toCompanion(false));
+        await put(_db.taskDeps, 'taskDeps', (j) => TaskDep.fromJson(j).toCompanion(false));
+        await put(_db.habits, 'habits', (j) => Habit.fromJson(j).toCompanion(false));
+        await put(_db.habitSchedules, 'habitSchedules', (j) => HabitSchedule.fromJson(j).toCompanion(false));
+        await put(_db.habitLogs, 'habitLogs', (j) => HabitLog.fromJson(j).toCompanion(false));
       });
     } on FormatException {
       rethrow;
