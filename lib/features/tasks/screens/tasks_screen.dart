@@ -107,13 +107,24 @@ class TasksScreen extends ConsumerWidget {
                       onTap: () async {
                         final d =
                             await _editTask(context, existing: t, projects: projects);
-                        if (d != null) {
-                          await repo.update(t.id,
-                              title: d.title,
-                              priority: d.priority,
-                              dueAt: d.dueAt,
-                              projectId: d.projectId);
+                        if (d == null) return;
+                        if (d.remove) {
+                          await repo.softDelete(t.id);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(SnackBar(
+                              content: const Text('حُذفت المهمة'),
+                              action: SnackBarAction(
+                                  label: 'تراجع', onPressed: () => repo.restore(t.id)),
+                            ));
+                          return;
                         }
+                        await repo.update(t.id,
+                            title: d.title,
+                            priority: d.priority,
+                            dueAt: d.dueAt,
+                            projectId: d.projectId);
                       },
                     ),
                   );
@@ -208,7 +219,15 @@ class _TaskTile extends StatelessWidget {
 }
 
 class _TaskDraft {
-  const _TaskDraft(this.title, this.priority, this.dueAt, this.projectId);
+  const _TaskDraft(this.title, this.priority, this.dueAt, this.projectId)
+      : remove = false;
+  const _TaskDraft.remove()
+      : title = '',
+        priority = 0,
+        dueAt = null,
+        projectId = null,
+        remove = true;
+  final bool remove;
   final String title;
   final int priority;
   final DateTime? dueAt;
@@ -319,6 +338,16 @@ class _TaskSheetState extends State<_TaskSheet> {
         SizedBox(
             width: double.infinity,
             child: FilledButton(onPressed: _save, child: const Text('حفظ'))),
+        if (widget.existing != null)
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('حذف المهمة'),
+              onPressed: () => Navigator.pop(context, const _TaskDraft.remove()),
+            ),
+          ),
       ]),
     );
   }
